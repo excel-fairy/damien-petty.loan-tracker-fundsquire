@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+</head>
+<body>
+<form id="myForm" onsubmit="event.preventDefault(); google.script.run.createLoan(this); google.script.host.close()">
+    <label>
+        Entity name:
+        <select name="entityName" onchange="disableLoanReferenceInputIfNeeded()" id="entity-select">
+            <? for (var i = 0; i < data.entities.length; i++) { ?>
+            <option value="<?= data.entities[i] ?>"> <?= data.entities[i] ?>
+                <? } ?>
+        </select>
+    </label>
+    <br><br>
+
+    <label>
+        Loan reference (Dacosi only):
+        <input type="text" name="loanReference" id="loan-reference-input" disabled>
+    </label>
+    <br><br>
+    <label>
+        Amount borrowed:
+        <input type="number" name="amountBorrowed" min="0" step="0.01" value="0">$
+    </label>
+    <br><br>
+    <label>
+        Date borrowed:
+        <input class="date-picker" type="date" name="dateBorrowed">
+    </label>
+    <br><br>
+    <label>
+        Due date:
+        <input class="date-picker" type="date" name="dueDate">
+    </label>
+    <br><br>
+    <label>
+        Interest rate:
+        <input type="number" name="interestRate" min="0" max="100" step="0.1" value="0">%
+    </label>
+    
+    <br><br>
+        <label>
+        Balloon Investment:
+        <select name="ballooninvestment">
+       <option>Yes</option>
+       <option>No</option>
+    </select>
+    </label>
+    
+    <br><br>
+    <label>
+        Borrower entity:
+        <select name="borrowerEntity">
+            <? for (var i = 0; i < data.borrowers.length; i++) { ?>
+            <option value="<?= data.borrowers[i] ?>"> <?= data.borrowers[i] ?>
+                <? } ?>
+        </select>
+    </label>
+    <br><br>
+    <br>
+    <input type="submit" value="Submit">
+</form><br>
+<input type="button" value="Cancel" onclick="google.script.host.close()" />
+</body>
+</html>
+
+<script type="text/javascript">
+    Date.prototype.toDateInputValue = (function() {
+        var local = new Date(this);
+        local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+        return local.toJSON().slice(0,10);
+    });
+    Array.from(document.getElementsByClassName('date-picker')).forEach(
+        function(e) {
+            e.value = new Date().toDateInputValue();
+        }
+    );
+    function disableLoanReferenceInputIfNeeded() {
+        var entitySelectDom = document.getElementById("entity-select");
+        var selectedEntity = entitySelectDom.options[entitySelectDom.selectedIndex].value;
+        document.getElementById("loan-reference-input").disabled = !(selectedEntity === 'Dacosi Investments Pty Ltd (Derek Goh)' || selectedEntity === 'Dacosi ST Pty Ltd (Derek Goh)');
+    }
+//# sourceURL=somename.js
+
+</script>

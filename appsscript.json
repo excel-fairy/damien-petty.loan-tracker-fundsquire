@@ -1,0 +1,15 @@
+{
+  "timeZone": "Asia/Calcutta",
+  "dependencies": {
+    "libraries": [{
+      "userSymbol": "ExportSpreadsheet",
+      "libraryId": "1XgUnRIGc3oOvbyWcavQcw8N_zOGpp8uNPiyMsI6MVzyMOx2lwezmnRYY",
+      "version": "1"
+    }, {
+      "userSymbol": "ColumnNames",
+      "libraryId": "1UGjRjbG235LzTJJpsi9nkwgRfSSHuWaWLiXqXS-pySdL_dSvwm5iGdei",
+      "version": "1"
+    }]
+  },
+  "exceptionLogging": "STACKDRIVER"
+}

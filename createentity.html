@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+</head>
+<body>
+<form id="myForm" onsubmit="event.preventDefault(); google.script.run.createEntity(this); google.script.host.close()">
+    <label>
+        Entity name:
+        <input type="text" name="entityName">
+    </label>
+    <br><br>
+
+    <label>
+        ABN/ABC:
+        <input type="text" name="abnAbc">
+    </label>
+    <br><br>
+
+    <label>
+        Primary contact name:
+        <input type="text" name="primaryContact">
+    </label>
+    <br><br>
+
+    <label>
+        Email address:
+        <input type="text" name="emailAddress">
+    </label>
+    <label>
+        Phone number:
+        <input type="text" name="phoneNumber">
+    </label>
+    <br><br>
+
+    <label>
+        Account name:
+        <input type="text" name="accountName">
+    </label>
+    <label>
+        Account number:
+        <input type="text" name="accountNumber">
+    </label>
+    <br><br>
+
+
+    <label>
+        BSB number:
+        <input type="text" name="bsbNumber">
+    </label>
+    <br><br>
+
+    <label>
+        First name:
+        <input type="text" name="firstName">
+    </label>
+    <br><br>
+
+    <label>
+        Carbon copy email addresses (searated by commas):
+        <input type="text" name="carbonCopyEmailAddress">
+    </label>
+    <br><br>
+
+    <br>
+
+    <input type="submit" value="Submit">
+</form><br>
+<input type="button" value="Cancel" onclick="google.script.host.close()" />
+</body>
+</html>
