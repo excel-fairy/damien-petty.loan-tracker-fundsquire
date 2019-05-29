@@ -21,7 +21,7 @@ var INTEREST_STATEMENT_SPREADSHEET = {
         sheet: SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Interest statement'),
         dateCell: 'H1',
         entityCell: 'C3',
-        borrowerCell: 'C4',
+        currencyCell: 'C4',
         totalColumn: ColumnNames.letterToColumnStart0('H'),
         pdfExportRange: {
             r1: 5,
@@ -53,7 +53,7 @@ var INTEREST_STATEMENT_SPREADSHEET = {
         sheet: SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Calc"),
         lastInvoiceNumberCell: 'I2',
         currentlyExportingEntityCell: 'G17',
-        currentlyExportingBorrowerCell: 'H17'
+        currentlyExportingCurrencyCell: 'H17'
     },
     loansSheet: {
         sheet: SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Loans"),
@@ -63,7 +63,7 @@ var INTEREST_STATEMENT_SPREADSHEET = {
         lastLoansColumn: 'N',
         loanReferenceColumn: 'A',
         entityNameColumn: 'C',
-        borrowerColumn: 'M'
+        currencyColumn: 'N'
     }
 };
 

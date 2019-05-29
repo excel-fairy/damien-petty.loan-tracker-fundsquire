@@ -8,7 +8,7 @@ function exportInterestStatements() {
     var gSpreadSheetRateLimitingMinInterval = 6000; // Interval in ms between two exports. Google spreadsheet API (used to export sheet to PDF.
                                                     // Returns HTTP 429 for rate limiting if too many requests are sent simultaneously
     var currentlyExportingEntity = getCurrentlyExportingEntityFromCalc();
-    var currentlyExportingBorrower = getCurrentlyExportingBorrowerFromCalc();
+    var currentlyExportingCurrency = getCurrentlyExportingCurrencyFromCalc();
     var entitiesStartIndex = 0;
     var exportExecutionStartDate = new Date();
     if(currentlyExportingEntity !== '')
@@ -17,14 +17,14 @@ function exportInterestStatements() {
         var entityName = entitiesNames[i];
         setCurrentlyExportingEntity(entityName);
 
-        var borrowersOfEntity = getBorrowersOfEntity(entityName);
-        if(borrowersOfEntity.length !== 0) {
-            var borrowersStartIndex = 0;
-            if(currentlyExportingBorrower !== '')
-                borrowersStartIndex = borrowersOfEntity.indexOf(currentlyExportingBorrower);
-            for(var j = borrowersStartIndex; j < borrowersOfEntity.length; j++) {
-                var borrower = borrowersOfEntity[j];
-                setCurrentlyExportingBorrower(borrower);
+        var currenciesOfEntity = getCurrenciesOfEntity(entityName);
+        if(currenciesOfEntity.length !== 0) {
+            var currenciesStartIndex = 0;
+            if(currentlyExportingCurrency !== '')
+                currenciesStartIndex = currenciesOfEntity.indexOf(currentlyExportingCurrency);
+            for(var j = currenciesStartIndex; j < currenciesOfEntity.length; j++) {
+                var currency = currenciesOfEntity[j];
+                setCurrentlyExportingCurrency(currency);
 
                 // Stops if script execution is becoming too close from the GAS limit per script (limit is 5min, stops at 4m30s)
                 if (isTimeUp(exportExecutionStartDate)) {
@@ -38,24 +38,24 @@ function exportInterestStatements() {
                 else
                     updateExportStatus(true);
 
-                var totalOfCurrentMonth = getTotalOfCurrentMonthForCurrentEntityAndBorrower();
+                var totalOfCurrentMonth = getTotalOfCurrentMonthForCurrentEntityAndCurrency();
                 Utilities.sleep(sheetUpdateInterval);
                 if (totalOfCurrentMonth !== 0) {
-                    exportInterestStatementForCurrentEntityAndBorrower();
+                    exportInterestStatementForCurrentEntityAndCurrency();
                     Utilities.sleep(gSpreadSheetRateLimitingMinInterval - sheetUpdateInterval);
                 }
             }
         }
     }
     setCurrentlyExportingEntity('');
-    setCurrentlyExportingBorrower('');
+    setCurrentlyExportingCurrency('');
     updateExportStatus(false)
 }
 
 /**
  * Get the total amount for the entity currently selected at the selected month
  */
-function getTotalOfCurrentMonthForCurrentEntityAndBorrower(){
+function getTotalOfCurrentMonthForCurrentEntityAndCurrency(){
     var allTransactions = INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(
         INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.transactionsRange.r1,
         INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.transactionsRange.c1,
@@ -86,18 +86,22 @@ function updateExportStatus(executionOnGoing) {
     else {
         textToWrite = 'All Entities exported!';
         var lastExportedEntity = getCurrentlyExportingEntityFromCalc();
-        var lastExportedBorrower = getCurrentlyExportingBorrowerFromCalc();
+        var lastExportedCurrency = getCurrentlyExportingCurrencyFromCalc();
         if(lastExportedEntity !== '')
-            textToWrite = 'Exported until entity ' + lastExportedEntity + ' for borrower ' + lastExportedBorrower + ', hit "Export & Send" again to proceed with the export';
+            textToWrite = 'Exported until entity ' + lastExportedEntity + ' for currency ' + lastExportedCurrency + ', hit "Export & Send" again to proceed with the export';
     }
     INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.exportStatusCell).setValue(textToWrite);
 }
 
-function exportInterestStatementForCurrentEntityAndBorrower(){
+function exportInterestStatementForCurrentEntityAndCurrency(){
     var dateStr = INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.dateCell).getValue();
     var entity = getCurrentlyExportingEntityFromInterestStatement();
-    var borrower = getCurrentlyExportingBorrowerFromInterestStatement();
-    var fileName = entity + ' - ' + borrower + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' - ' + dateStr;
+    var currency = getCurrentlyExportingCurrencyFromInterestStatement();
+    var fileName;
+    if(currency === "AUD")
+        var fileName = entity + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' - ' + dateStr;
+    else
+    var fileName = entity + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' (' + currency + ') - ' + dateStr;
     var exportFolderId = getFolderToExportPdfTo(EXPORT_FOLDER_ID, dateStr).getId();
 
     var exportOptions = {
@@ -111,20 +115,20 @@ function exportInterestStatementForCurrentEntityAndBorrower(){
 
 function sendEmail(attachment) {
     var entityName = getCurrentlyExportingEntityFromInterestStatement();
-    var borrowerName = getCurrentlyExportingBorrowerFromInterestStatement();
+    var currencyName = getCurrentlyExportingCurrencyFromInterestStatement();
     var entity = getEntityFromName(entityName);
     if(!entity)
         SpreadsheetApp.getActiveSpreadsheet().toast('Entity ' + entityName + ' not found in entities list. No email sent');
     else {
         var recipient = entity[INTEREST_STATEMENT_SPREADSHEET.entitiesSheet.emailAddressColumn];
         var subjectTemplate = entity[INTEREST_STATEMENT_SPREADSHEET.entitiesSheet.emailSubjectColumn];
-        var subject = fillBorrower(subjectTemplate, borrowerName);
+        var subject = fillCurrency(subjectTemplate, currencyName);
         var messageTemplate = entity[INTEREST_STATEMENT_SPREADSHEET.entitiesSheet.emailBodyColumn];
-        var message = fillBorrower(messageTemplate, borrowerName);
+        var message = fillCurrency(messageTemplate, currencyName);
         var carbonCopyEmailAddresses = entity[INTEREST_STATEMENT_SPREADSHEET.entitiesSheet.carbonCopyEmailAddressesColumn];
         var emailOptions = {
             attachments: [attachment.getAs(MimeType.PDF)],
-            name: borrowerName,
+            name: currencyName,
             cc: carbonCopyEmailAddresses
         };
         MailApp.sendEmail(recipient, subject, message, emailOptions);
@@ -133,18 +137,18 @@ function sendEmail(attachment) {
 
 
 /**
- * Get all the borrowers of a given entity
+ * Get all the currencies of a given entity
  * @param entity
- * @return Array of borrowers
+ * @return Array of currencies
  */
-function getBorrowersOfEntity(entity){
+function getCurrenciesOfEntity(entity){
     var entityNameColS0 = ColumnNames.letterToColumnStart0(INTEREST_STATEMENT_SPREADSHEET.loansSheet.entityNameColumn);
-    var borrowerCol0 = ColumnNames.letterToColumnStart0(INTEREST_STATEMENT_SPREADSHEET.loansSheet.borrowerColumn);
+    var currencyCol0 = ColumnNames.letterToColumnStart0(INTEREST_STATEMENT_SPREADSHEET.loansSheet.currencyColumn);
     var loans = getAllLoans();
     return loans.filter(function (loan) { // Keep only loans for the entity
         return loan[entityNameColS0] === entity;
-    }).map(function (loan) { // Keep only the borrowers of the entities and ditch the rest of data
-        return loan[borrowerCol0];
+    }).map(function (loan) { // Keep only the currencies of the entities and ditch the rest of data
+        return loan[currencyCol0];
     }).filter(function onlyUnique(value, index, self) { // Deduplicate array
             return self.indexOf(value) === index;
         }
@@ -187,24 +191,24 @@ function setCurrentlyExportingEntity(entityName) {
     INTEREST_STATEMENT_SPREADSHEET.calcSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.calcSheet.currentlyExportingEntityCell).setValue(entityName);
 }
 
-function getCurrentlyExportingBorrowerFromInterestStatement() {
-    return INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.borrowerCell).getValue();
+function getCurrentlyExportingCurrencyFromInterestStatement() {
+    return INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.currencyCell).getValue();
 }
 
-function getCurrentlyExportingBorrowerFromCalc() {
-    return INTEREST_STATEMENT_SPREADSHEET.calcSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.calcSheet.currentlyExportingBorrowerCell).getValue();
+function getCurrentlyExportingCurrencyFromCalc() {
+    return INTEREST_STATEMENT_SPREADSHEET.calcSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.calcSheet.currentlyExportingCurrencyCell).getValue();
 }
 
-function setCurrentlyExportingBorrower(borrower) {
-    INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.borrowerCell).setValue(borrower);
-    INTEREST_STATEMENT_SPREADSHEET.calcSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.calcSheet.currentlyExportingBorrowerCell).setValue(borrower);
+function setCurrentlyExportingCurrency(currency) {
+    INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.currencyCell).setValue(currency);
+    INTEREST_STATEMENT_SPREADSHEET.calcSheet.sheet.getRange(INTEREST_STATEMENT_SPREADSHEET.calcSheet.currentlyExportingCurrencyCell).setValue(currency);
 }
 
 /**
- * Replace the string "{borrower}" in a template string
+ * Replace the string "{currency}" in a template string
  * @param templateString template
- * @param borrower Borrower to inject in the template
+ * @param currency Currency to inject in the template
  */
-function fillBorrower(templateString, borrower){
-    return templateString.replace("{borrower}", borrower);
+function fillCurrency(templateString, currency){
+    return templateString.replace("{currency}", currency);
 }
