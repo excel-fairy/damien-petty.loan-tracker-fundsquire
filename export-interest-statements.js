@@ -99,9 +99,9 @@ function exportInterestStatementForCurrentEntityAndCurrency(){
     var currency = getCurrentlyExportingCurrencyFromInterestStatement();
     var fileName;
     if(currency === "AUD")
-        var fileName = entity + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' - ' + dateStr;
+        fileName = entity + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' - ' + dateStr;
     else
-    var fileName = entity + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' (' + currency + ') - ' + dateStr;
+        fileName = entity + ' - ' + INTEREST_STATEMENT_SPREADSHEET.interestStatementSheet.name + ' (' + currency + ') - ' + dateStr;
     var exportFolderId = getFolderToExportPdfTo(EXPORT_FOLDER_ID, dateStr).getId();
 
     var exportOptions = {

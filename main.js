@@ -19,23 +19,23 @@ var INTEREST_STATEMENT_SPREADSHEET = {
     interestStatementSheet: {
         name: 'Interest statement',
         sheet: SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Interest statement'),
-        dateCell: 'H1',
+        dateCell: 'J1',
         entityCell: 'C3',
         currencyCell: 'C4',
-        totalColumn: ColumnNames.letterToColumnStart0('H'),
+        totalColumn: ColumnNames.letterToColumnStart0('J'),
         pdfExportRange: {
             r1: 5,
-            r2: 46,
+            r2: 47,
             c1: ColumnNames.letterToColumnStart0('B'),
-            c2: ColumnNames.letterToColumnStart0('I')
+            c2: ColumnNames.letterToColumnStart0('K')
         },
         transactionsRange: {
             r1: 20,
             r2: 34,
             c1: ColumnNames.letterToColumn('B'),
-            c2: ColumnNames.letterToColumn('H') + 1
+            c2: ColumnNames.letterToColumn('J') + 1
         },
-        exportStatusCell: 'F3'
+        exportStatusCell: 'G3'
     },
     invoicesSheet: {
         name: 'Invoices',
